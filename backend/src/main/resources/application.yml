@@ -1,0 +1,50 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: market-engine
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        linger.ms: 5
+    consumer:
+      group-id: analytics
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/market}
+    username: ${DB_USER:market}
+    password: ${DB_PASSWORD:market}
+  sql:
+    init:
+      mode: always   # runs schema.sql (CREATE TABLE IF NOT EXISTS ...) on startup
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+
+market:
+  topic: ticks
+  partitions: 4              # ticks are keyed by symbol, so one symbol always goes to the same partition
+  consumer-group: analytics
+  consumer-concurrency: 4    # one consumer thread per partition
+  bar-ms: 60000              # 1 minute bars
+  lateness-ms: 15000         # how long a bar stays open for late / out-of-order ticks
+  starting-cash: 100000
+  engine:
+    host: ${ENGINE_HOST:localhost}
+    port: ${ENGINE_PORT:9099}
+  bot-refresh-ms: 250        # at most one liquidity bot refresh per symbol per this many ms

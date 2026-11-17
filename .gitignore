@@ -1,0 +1,10 @@
+build/
+target/
+node_modules/
+dist/
+__pycache__/
+.pytest_cache/
+.venv/
+*.class
+.idea/
+.vscode/
